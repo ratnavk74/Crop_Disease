@@ -3,70 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Crop Disease Detection</title>
+    <title> Crop Disease Detection</title>
 
-    <style>
+    <link rel="stylesheet"
+    href="{{ url_for('static', filename='style.css') }}">
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', sans-serif;
-        }
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-        body {
-            height: 100vh;
-            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)),
-            url('https://images.unsplash.com/photo-1500937386664-56d1dfef3854') no-repeat center center/cover;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-        .container {
-            width: 500px;
-            background: rgba(255,255,255,0.12);
-            backdrop-filter: blur(14px);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 25px;
-            padding: 40px;
-            text-align: center;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            animation: fadeIn 1s ease;
-        }
+</head>
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0px);
-            }
-        }
+<body>
 
-        h1 {
-            color: white;
-            margin-bottom: 15px;
-            font-size: 34px;
-            font-weight: bold;
-        }
+    <div class="overlay">
 
-        .subtitle {
-            color: #f1f1f1;
-            margin-bottom: 30px;
-            font-size: 16px;
-        }
+        <div class="container">
 
-        .upload-box {
-            border: 2px dashed rgba(255,255,255,0.5);
-            padding: 30px;
-            border-radius: 20px;
-            margin-bottom: 25px;
-            transition: 0.3s;
-        }
+            <div class="logo">
+                🌾
+            </div>
 
-        .upload-box:hover {
+            <h1>
+                 Crop Disease Detection
+            </h1>
+
+            <p>
+                Smart Deep Learning System for Wheat and Maize Disease Prediction
+            </p>
+
+            <form action="/predict"
+            method="POST"
+            enctype="multipart/form-data">
+
+                <input type="file"
+                name="image"
+                required>
+
+                <button type="submit">
+                    Predict Disease
+                </button>
+
+            </form>
+
+            <button class="voice-btn"
+            onclick="speakMessage()">
+                🔊 Voice Assistant
+            </button>
+
+            <div class="features">
+
+                <div class="feature-card">
+                    <h3>🌿 Wheat Disease</h3>
+                    <p>Detect Rust, Septoria, Leaf Blight and More</p>
+                </div>
+
+                <div class="feature-card">
+                    <h3>🌽 Maize Disease</h3>
+                    <p>Identify Common Rust and Blight Instantly</p>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+<script>
+
+function speakMessage(){
+
+    let message = new SpeechSynthesisUtterance(
+        "Welcome to Crop Disease Detection System. Upload a Wheat or Maize crop image to predict diseases using Deep Learning technology."
+    );
+
+    message.rate = 1;
+    message.pitch = 1;
+    message.volume = 1;
+
+    speechSynthesis.speak(message);
+}
+
+window.onload = function(){
+
+    let welcome = new SpeechSynthesisUtterance(
+        " Crop Disease Detection System Loaded Successfully"
+    );
+
+    welcome.rate = 1;
+
+    speechSynthesis.speak(welcome);
+}
+
+</script>
+
+</body>
 </html>

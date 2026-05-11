@@ -7,19 +7,6 @@ DISEASE_INFO = {
         'prevention': 'Use certified seeds and monitor crop regularly.'
     },
 
-    'Wheat_Rust': {
-        'cause': 'Fungal infection caused by Puccinia species.',
-        'symptoms': 'Orange or brown rust spots on leaves.',
-        'treatment': 'Apply fungicides like Propiconazole.',
-        'prevention': 'Use resistant wheat varieties and crop rotation.'
-    },
-
-    'Wheat_Septoria': {
-        'cause': 'Fungal disease caused by Septoria tritici.',
-        'symptoms': 'Brown lesions with yellow edges.',
-        'treatment': 'Use fungicides and remove infected leaves.',
-        'prevention': 'Avoid overcrowding and improve air circulation.'
-    },
 
     'Maize_Healthy': {
         'cause': 'Healthy crop',
@@ -49,12 +36,7 @@ DISEASE_INFO = {
     'prevention': 'Avoid excessive irrigation and use resistant seeds.'
 },
 
-'Wheat_LeafBlight': {
-    'cause': 'Fungal disease caused by Bipolaris sorokiniana.',
-    'symptoms': 'Brown elongated lesions on leaves.',
-    'treatment': 'Apply fungicides like Mancozeb.',
-    'prevention': 'Use disease-resistant seeds and crop rotation.'
-},
+
 
     'Maize_Common_Rust': {
         'cause': 'Fungal infection caused by Puccinia sorghi.',

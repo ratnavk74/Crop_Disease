@@ -3,7 +3,7 @@ import numpy as np
 from utils.preprocess import preprocess_image
 
 model = tf.keras.models.load_model(
-    'models/advanced_crop_disease_model.h5'
+    'models/crop_disease_model.h5'
 )
 
 classes = [
@@ -13,8 +13,6 @@ classes = [
     'Wheat_BlackRust',
     'Wheat_BrownRust',
     'Wheat_Healthy',
-    'Wheat_LeafBlight',
-    'Wheat_Septoria',
     'Wheat_YellowRust'
 ]
 

@@ -10,9 +10,12 @@ classes = [
     'Maize_Blight',
     'Maize_Common_Rust',
     'Maize_Healthy',
+    'Wheat_BlackRust',
+    'Wheat_BrownRust',
     'Wheat_Healthy',
-    'Wheat_Rust',
-    'Wheat_Septoria'
+    'Wheat_LeafBlight',
+    'Wheat_Septoria',
+    'Wheat_YellowRust'
 ]
 
 

@@ -28,6 +28,34 @@ DISEASE_INFO = {
         'prevention': 'Regular field inspection.'
     },
 
+    'Wheat_BlackRust': {
+    'cause': 'Fungal infection caused by Puccinia graminis.',
+    'symptoms': 'Dark black pustules on wheat stems and leaves.',
+    'treatment': 'Apply fungicides such as Triazoles.',
+    'prevention': 'Use resistant wheat varieties and crop rotation.'
+},
+
+'Wheat_BrownRust': {
+    'cause': 'Fungal disease caused by Puccinia triticina.',
+    'symptoms': 'Brown rust pustules on wheat leaves.',
+    'treatment': 'Use fungicides like Propiconazole.',
+    'prevention': 'Use certified seeds and resistant varieties.'
+},
+
+'Wheat_YellowRust': {
+    'cause': 'Fungal disease caused by Puccinia striiformis.',
+    'symptoms': 'Yellow stripe-like pustules on leaves.',
+    'treatment': 'Apply suitable fungicides immediately.',
+    'prevention': 'Avoid excessive irrigation and use resistant seeds.'
+},
+
+'Wheat_LeafBlight': {
+    'cause': 'Fungal disease caused by Bipolaris sorokiniana.',
+    'symptoms': 'Brown elongated lesions on leaves.',
+    'treatment': 'Apply fungicides like Mancozeb.',
+    'prevention': 'Use disease-resistant seeds and crop rotation.'
+},
+
     'Maize_Common_Rust': {
         'cause': 'Fungal infection caused by Puccinia sorghi.',
         'symptoms': 'Small brown pustules on leaves.',
@@ -41,4 +69,6 @@ DISEASE_INFO = {
         'treatment': 'Apply appropriate fungicides.',
         'prevention': 'Crop rotation and disease-resistant seeds.'
     }
+
+    
 }

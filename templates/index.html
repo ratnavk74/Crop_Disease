@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('app_name') }} - {{ t('app_tagline') }}{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="hero-content">
+        <div class="hero-pill"><i class="fa-solid fa-microscope"></i> {{ t('hero_pill') }}</div>
+        <h1 class="hero-title">{{ t('hero_title_1') }} <span class="highlight">{{ t('hero_title_highlight') }}</span></h1>
+        <p class="hero-subtitle">{{ t('hero_subtitle') }}</p>
+        <div class="hero-actions">
+            <button type="button" class="btn btn-primary hero-voice-btn" data-voice-start>
+                <i class="fa-solid fa-microphone"></i> {{ t('voice_card_cta') }}
+            </button>
+            <span class="hero-voice-hint"><i class="fa-solid fa-volume-high"></i> {{ t('voice_mic_hint') }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="container upload-grid" id="upload">
+    <!-- Main Upload Card -->
+    <div class="card upload-card">
+        <div class="card-header">
+            <h2><i class="fa-solid fa-cloud-arrow-up"></i> {{ t('upload_title') }}</h2>
+            <p>{{ t('upload_subtitle') }}</p>
+        </div>
+
+        <form action="{{ url_for('predict') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
+            <div class="drop-zone" id="dropZone">
+                <input type="file" name="image" id="fileInput" accept="image/png, image/jpeg, image/jpg, image/webp" class="file-input" required>
+
+                <div class="drop-zone-content" id="dropZonePrompt">
+                    <div class="upload-icon-wrapper">
+                        <i class="fa-solid fa-file-image"></i>
+                    </div>
+                    <h3>{{ t('drop_title') }}</h3>
+                    <p>{{ t('drop_or') }} <span class="browse-link">{{ t('drop_browse') }}</span> {{ t('drop_suffix') }}</p>
+                    <span class="upload-hint">{{ t('drop_hint') }}</span>
+                </div>
+
+                <!-- Live Preview Container -->
+                <div class="preview-container hidden" id="previewContainer">
+                    <img src="" alt="{{ t('original_title') }}" id="imagePreview" class="image-preview">
+                    <button type="button" class="btn-remove-preview" id="btnRemovePreview" title="{{ t('voice_dismiss') }}">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    <p class="preview-filename" id="previewFilename"></p>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-analyze" id="btnSubmit">
+                <span class="btn-text"><i class="fa-solid fa-wand-magic-sparkles"></i> {{ t('btn_analyze') }}</span>
+                <span class="btn-loader hidden" id="btnLoader"><i class="fa-solid fa-circle-notch fa-spin"></i> {{ t('btn_analyzing') }}</span>
+            </button>
+
+            <p class="upload-voice-hint">
+                <i class="fa-solid fa-microphone"></i> {{ t('voice_mic_hint') }}
+                <button type="button" class="link-button" data-voice-start>{{ t('voice_ask') }}</button>
+            </p>
+        </form>
+    </div>
+
+    <!-- Features Overview Sidebar Card -->
+    <div class="card feature-card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-clipboard-check"></i> {{ t('feature_title') }}</h3>
+            <p>{{ t('feature_intro') }}</p>
+        </div>
+        <ul class="feature-list">
+            <li>
+                <div class="feature-icon"><i class="fa-solid fa-dna"></i></div>
+                <div>
+                    <strong>{{ t('feature_1_title') }}</strong>
+                    <p>{{ t('feature_1_desc') }}</p>
+                </div>
+            </li>
+            <li>
+                <div class="feature-icon"><i class="fa-solid fa-cloud-rain"></i></div>
+                <div>
+                    <strong>{{ t('feature_2_title') }}</strong>
+                    <p>{{ t('feature_2_desc') }}</p>
+                </div>
+            </li>
+            <li>
+                <div class="feature-icon"><i class="fa-solid fa-shield-virus"></i></div>
+                <div>
+                    <strong>{{ t('feature_3_title') }}</strong>
+                    <p>{{ t('feature_3_desc') }}</p>
+                </div>
+            </li>
+            <li>
+                <div class="feature-icon"><i class="fa-solid fa-prescription-bottle-medical"></i></div>
+                <div>
+                    <strong>{{ t('feature_4_title') }}</strong>
+                    <p>{{ t('feature_4_desc') }}</p>
+                </div>
+            </li>
+            <li>
+                <div class="feature-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <div>
+                    <strong>{{ t('feature_5_title') }}</strong>
+                    <p>{{ t('feature_5_desc') }}</p>
+                </div>
+            </li>
+            <li>
+                <div class="feature-icon"><i class="fa-solid fa-eye"></i></div>
+                <div>
+                    <strong>{{ t('feature_6_title') }}</strong>
+                    <p>{{ t('feature_6_desc') }}</p>
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<!-- Voice-first access for farmers -->
+<section class="container voice-promo-section">
+    <div class="voice-promo-card">
+        <div class="voice-promo-icon"><i class="fa-solid fa-microphone-lines"></i></div>
+        <div class="voice-promo-text">
+            <h3>{{ t('voice_card_title') }}</h3>
+            <p>{{ t('voice_card_desc') }}</p>
+        </div>
+        <button type="button" class="btn btn-primary" data-voice-start>
+            <i class="fa-solid fa-microphone"></i> {{ t('voice_card_cta') }}
+        </button>
+    </div>
+</section>
+
+<!-- 1-Click Quick Test Samples Section -->
+<section class="container samples-section">
+    <div class="section-header">
+        <div class="section-tag"><i class="fa-solid fa-flask"></i> {{ t('samples_tag') }}</div>
+        <h2>{{ t('samples_title') }}</h2>
+        <p>{{ t('samples_desc') }}</p>
+    </div>
+
+    <div class="samples-grid">
+        <!-- Sample 1: Maize Blight -->
+        <div class="sample-card">
+            <div class="sample-img-wrapper">
+                <img src="{{ url_for('static', filename='samples/maize_blight.jpg') }}" alt="{{ t('sample_maize_blight_title') }}">
+                <span class="sample-badge badge-high">{{ t('badge_critical') }}</span>
+            </div>
+            <div class="sample-info">
+                <h4>{{ t('sample_maize_blight_title') }}</h4>
+                <p>{{ t('sample_maize_blight_desc') }}</p>
+                <form action="{{ url_for('predict') }}" method="POST">
+                    <input type="hidden" name="sample_name" value="maize_blight.jpg">
+                    <button type="submit" class="btn btn-sm btn-outline"><i class="fa-solid fa-bolt"></i> {{ t('btn_test') }}</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sample 2: Maize Common Rust -->
+        <div class="sample-card">
+            <div class="sample-img-wrapper">
+                <img src="{{ url_for('static', filename='samples/maize_common_rust.jpg') }}" alt="{{ t('sample_maize_common_rust_title') }}">
+                <span class="sample-badge badge-medium">{{ t('badge_moderate') }}</span>
+            </div>
+            <div class="sample-info">
+                <h4>{{ t('sample_maize_common_rust_title') }}</h4>
+                <p>{{ t('sample_maize_common_rust_desc') }}</p>
+                <form action="{{ url_for('predict') }}" method="POST">
+                    <input type="hidden" name="sample_name" value="maize_common_rust.jpg">
+                    <button type="submit" class="btn btn-sm btn-outline"><i class="fa-solid fa-bolt"></i> {{ t('btn_test') }}</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sample 3: Wheat Yellow Rust -->
+        <div class="sample-card">
+            <div class="sample-img-wrapper">
+                <img src="{{ url_for('static', filename='samples/wheat_yellow_rust.jpg') }}" alt="{{ t('sample_wheat_yellow_rust_title') }}">
+                <span class="sample-badge badge-high">{{ t('badge_critical') }}</span>
+            </div>
+            <div class="sample-info">
+                <h4>{{ t('sample_wheat_yellow_rust_title') }}</h4>
+                <p>{{ t('sample_wheat_yellow_rust_desc') }}</p>
+                <form action="{{ url_for('predict') }}" method="POST">
+                    <input type="hidden" name="sample_name" value="wheat_yellow_rust.jpg">
+                    <button type="submit" class="btn btn-sm btn-outline"><i class="fa-solid fa-bolt"></i> {{ t('btn_test') }}</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sample 4: Wheat Black Rust -->
+        <div class="sample-card">
+            <div class="sample-img-wrapper">
+                <img src="{{ url_for('static', filename='samples/wheat_black_rust.jpg') }}" alt="{{ t('sample_wheat_black_rust_title') }}">
+                <span class="sample-badge badge-high">{{ t('badge_critical') }}</span>
+            </div>
+            <div class="sample-info">
+                <h4>{{ t('sample_wheat_black_rust_title') }}</h4>
+                <p>{{ t('sample_wheat_black_rust_desc') }}</p>
+                <form action="{{ url_for('predict') }}" method="POST">
+                    <input type="hidden" name="sample_name" value="wheat_black_rust.jpg">
+                    <button type="submit" class="btn btn-sm btn-outline"><i class="fa-solid fa-bolt"></i> {{ t('btn_test') }}</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sample 5: Wheat Brown Rust -->
+        <div class="sample-card">
+            <div class="sample-img-wrapper">
+                <img src="{{ url_for('static', filename='samples/wheat_brown_rust.jpg') }}" alt="{{ t('sample_wheat_brown_rust_title') }}">
+                <span class="sample-badge badge-medium">{{ t('badge_moderate') }}</span>
+            </div>
+            <div class="sample-info">
+                <h4>{{ t('sample_wheat_brown_rust_title') }}</h4>
+                <p>{{ t('sample_wheat_brown_rust_desc') }}</p>
+                <form action="{{ url_for('predict') }}" method="POST">
+                    <input type="hidden" name="sample_name" value="wheat_brown_rust.jpg">
+                    <button type="submit" class="btn btn-sm btn-outline"><i class="fa-solid fa-bolt"></i> {{ t('btn_test') }}</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sample 6: Maize Healthy -->
+        <div class="sample-card">
+            <div class="sample-img-wrapper">
+                <img src="{{ url_for('static', filename='samples/maize_healthy.jpg') }}" alt="{{ t('sample_maize_healthy_title') }}">
+                <span class="sample-badge badge-healthy">{{ t('badge_healthy') }}</span>
+            </div>
+            <div class="sample-info">
+                <h4>{{ t('sample_maize_healthy_title') }}</h4>
+                <p>{{ t('sample_maize_healthy_desc') }}</p>
+                <form action="{{ url_for('predict') }}" method="POST">
+                    <input type="hidden" name="sample_name" value="maize_healthy.jpg">
+                    <button type="submit" class="btn btn-sm btn-outline"><i class="fa-solid fa-bolt"></i> {{ t('btn_test') }}</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sample 7: Wheat Healthy -->
+        <div class="sample-card">
+            <div class="sample-img-wrapper">
+                <img src="{{ url_for('static', filename='samples/wheat_healthy.jpg') }}" alt="{{ t('sample_wheat_healthy_title') }}">
+                <span class="sample-badge badge-healthy">{{ t('badge_healthy') }}</span>
+            </div>
+            <div class="sample-info">
+                <h4>{{ t('sample_wheat_healthy_title') }}</h4>
+                <p>{{ t('sample_wheat_healthy_desc') }}</p>
+                <form action="{{ url_for('predict') }}" method="POST">
+                    <input type="hidden" name="sample_name" value="wheat_healthy.jpg">
+                    <button type="submit" class="btn btn-sm btn-outline"><i class="fa-solid fa-bolt"></i> {{ t('btn_test') }}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

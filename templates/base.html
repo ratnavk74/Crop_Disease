@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ t('app_name') }} - {{ t('app_tagline') }}{% endblock %}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+
+    <!-- Navigation Header -->
+    <header class="navbar no-print">
+        <div class="nav-container">
+            <a href="{{ url_for('home') if is_authenticated else url_for('login') }}" class="brand-logo">
+                <span class="brand-icon"><i class="fa-solid fa-seedling"></i></span>
+                <span class="brand-text">Crop<strong>Shield</strong> AI</span>
+            </a>
+
+            <div class="nav-right">
+                <div class="nav-badges">
+                    <span class="nav-tag"><i class="fa-solid fa-brain"></i> {{ t('nav_tag_ai') }}</span>
+                    <span class="nav-tag"><i class="fa-solid fa-wheat-awn"></i> {{ t('nav_tag_crops') }}</span>
+                </div>
+
+                <!-- Language recognition / switcher -->
+                <label class="language-switcher" title="{{ t('language_note') }}">
+                    <i class="fa-solid fa-language" aria-hidden="true"></i>
+                    <span class="sr-only">{{ t('nav_language') }}</span>
+                    <select id="languageSelect" data-lang-select aria-label="{{ t('nav_language') }}">
+                        {% for code, meta in languages.items() %}
+                        <option value="{{ code }}" {% if code == lang %}selected{% endif %}>{{ meta.native }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                {% if is_authenticated %}
+                <span class="nav-user">
+                    <i class="fa-solid fa-user-circle"></i>
+                    {{ t('nav_hello', name=current_user.name) }}
+                </span>
+                <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline nav-auth-btn">
+                    <i class="fa-solid fa-right-from-bracket"></i> {{ t('nav_logout') }}
+                </a>
+                {% else %}
+                <a href="{{ url_for('login') }}" class="btn btn-sm btn-outline nav-auth-btn">
+                    <i class="fa-solid fa-right-to-bracket"></i> {{ t('nav_login') }}
+                </a>
+                <a href="{{ url_for('register') }}" class="btn btn-sm btn-primary nav-auth-btn">
+                    <i class="fa-solid fa-user-plus"></i> {{ t('nav_register') }}
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- Flash messages (validation, login status, etc.) -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-wrapper no-print" role="status" aria-live="polite">
+            {% for category, message in messages %}
+            <div class="flash-message flash-{{ category }}">
+                <i class="fa-solid {% if category == 'success' %}fa-circle-check{% elif category == 'error' %}fa-circle-exclamation{% else %}fa-circle-info{% endif %}"></i>
+                <span>{{ message }}</span>
+                <button type="button" class="flash-close" aria-label="{{ t('voice_dismiss') }}">&times;</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content Block -->
+    <main class="main-wrapper">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Professional Footer -->
+    <footer class="footer no-print">
+        <div class="footer-container">
+            <div class="footer-col">
+                <div class="footer-brand">
+                    <i class="fa-solid fa-leaf"></i> {{ t('app_name') }}
+                </div>
+                <p>{{ t('footer_about') }}</p>
+            </div>
+            <div class="footer-col">
+                <h4>{{ t('footer_crops_title') }}</h4>
+                <p>{{ t('footer_maize') }}</p>
+                <p>{{ t('footer_wheat') }}</p>
+            </div>
+            <div class="footer-col">
+                <h4>{{ t('footer_features_title') }}</h4>
+                <p>{{ t('footer_feat1') }}</p>
+                <p>{{ t('footer_feat2') }}</p>
+                <p>{{ t('footer_feat3') }}</p>
+                <p>{{ t('footer_feat4') }}</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>{{ t('footer_bottom') }}</p>
+            <p class="footer-lang"><i class="fa-solid fa-language"></i> {{ t('report_lang_note', language=language_meta.native) }}</p>
+        </div>
+    </footer>
+
+    <!-- Floating Voice Assistant (speech recognition + speech output) -->
+    <div class="voice-widget no-print" id="voiceWidget">
+        <button type="button" class="voice-fab" id="voiceFab" data-voice-toggle
+                aria-label="{{ t('nav_voice') }}" aria-expanded="false" aria-controls="voicePanel">
+            <i class="fa-solid fa-microphone"></i>
+            <span class="voice-fab-label">{{ t('nav_voice') }}</span>
+        </button>
+
+        <section class="voice-panel hidden" id="voicePanel" aria-live="polite">
+            <div class="voice-panel-header">
+                <div>
+                    <h4><i class="fa-solid fa-microphone-lines"></i> {{ t('voice_panel_title') }}</h4>
+                    <p>{{ t('voice_panel_desc') }}</p>
+                </div>
+                <button type="button" class="voice-close" id="voiceClose" aria-label="{{ t('voice_dismiss') }}">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="voice-status" id="voiceStatus">{{ t('voice_mic_hint') }}</div>
+
+            <div class="voice-transcript hidden" id="voiceTranscript">
+                <span>{{ t('voice_heard') }}:</span>
+                <p id="voiceTranscriptText"></p>
+            </div>
+
+            <div class="voice-reply hidden" id="voiceReply">
+                <span>{{ t('voice_reply') }}:</span>
+                <p id="voiceReplyText"></p>
+            </div>
+
+            <div class="voice-examples">
+                <span>{{ t('voice_examples_title') }}:</span>
+                <button type="button" class="voice-chip" data-voice-example="{{ t('voice_example_1') }}">{{ t('voice_example_1') }}</button>
+                <button type="button" class="voice-chip" data-voice-example="{{ t('voice_example_2') }}">{{ t('voice_example_2') }}</button>
+                <button type="button" class="voice-chip" data-voice-example="{{ t('voice_example_3') }}">{{ t('voice_example_3') }}</button>
+                <button type="button" class="voice-chip" data-voice-example="{{ t('voice_example_4') }}">{{ t('voice_example_4') }}</button>
+                <button type="button" class="voice-chip" data-voice-example="{{ t('voice_example_5') }}">{{ t('voice_example_5') }}</button>
+            </div>
+
+            <button type="button" class="btn btn-primary btn-block voice-listen-btn" id="voiceListenBtn" data-voice-start>
+                <i class="fa-solid fa-microphone"></i>
+                <span class="voice-listen-label">{{ t('voice_start') }}</span>
+            </button>
+            <p class="voice-help">{{ t('voice_help') }}</p>
+        </section>
+    </div>
+
+    <!-- Config for speech recognition / localisation -->
+    <script>
+        window.CROPSHIELD = {
+            lang: "{{ lang }}",
+            speechLang: "{{ speech_lang }}",
+            page: "{{ page|default('home') }}",
+            diseaseKey: "{{ disease_key|default('') }}",
+            confidence: "{{ confidence|default('') }}",
+            isAuthenticated: {{ 'true' if is_authenticated else 'false' }},
+            urls: {
+                assistant: "{{ url_for('api_assistant') }}",
+                setLanguage: "{{ url_for('set_language', language='__LANG__') }}",
+                home: "{{ url_for('home') if is_authenticated else url_for('login') }}",
+                login: "{{ url_for('login') }}",
+                logout: "{{ url_for('logout') }}"
+            },
+            i18n: {
+                voiceNotSupported: "{{ t('voice_not_supported')|e }}",
+                ttsNotSupported: "{{ t('voice_tts_not_supported')|e }}",
+                permissionDenied: "{{ t('voice_permission_denied')|e }}",
+                noSpeech: "{{ t('voice_no_speech')|e }}",
+                listening: "{{ t('voice_listening')|e }}",
+                processing: "{{ t('voice_processing')|e }}",
+                start: "{{ t('voice_start')|e }}",
+                stop: "{{ t('voice_stop')|e }}",
+                heard: "{{ t('voice_heard')|e }}",
+                reply: "{{ t('voice_reply')|e }}",
+                help: "{{ t('voice_help')|e }}",
+                error: "{{ t('assistant_error')|e }}",
+                loginNeeded: "{{ t('assistant_login_needed')|e }}",
+                unsupportedShort: "{{ t('voice_unsupported_short')|e }}",
+                invalidImage: "{{ t('error_invalid_file')|e }}"
+            }
+        };
+    </script>
+
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/voice.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

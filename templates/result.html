@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('report_ref') }} - {{ display_name }}{% endblock %}
+
+{% block content %}
+<div class="result-page-container">
+
+    <!-- Top Action Bar (Print & Return) -->
+    <div class="action-bar no-print">
+        <a href="{{ url_for('home') }}" class="btn btn-outline">
+            <i class="fa-solid fa-arrow-left"></i> {{ t('result_back') }}
+        </a>
+        <div class="action-buttons-group">
+            <button type="button" class="btn btn-secondary" onclick="window.print()">
+                <i class="fa-solid fa-print"></i> {{ t('result_print') }}
+            </button>
+        </div>
+    </div>
+
+    <!-- Official Agronomic Report Card -->
+    <div class="advisory-report-card">
+
+        <!-- Report Header / Diagnosis Badge -->
+        <div class="report-header">
+            <div class="report-title-area">
+                <span class="crop-tag"><i class="fa-solid fa-seedling"></i> {{ crop }}</span>
+                <h1 class="disease-title">{{ display_name }}</h1>
+                <p class="pathogen-subtitle">
+                    <strong>{{ t('pathogen_label') }}:</strong> <em>{{ pathogen }}</em>
+                </p>
+                <p class="report-language-line">
+                    <i class="fa-solid fa-language"></i>
+                    {{ t('report_lang_note', language=language_meta.native) }}
+                </p>
+            </div>
+            <div class="metric-badges">
+                <div class="metric-box">
+                    <span class="metric-label">{{ t('confidence_label') }}</span>
+                    <span class="metric-val text-confidence">{{ confidence }}%</span>
+                </div>
+                <div class="metric-box">
+                    <span class="metric-label">{{ t('severity_label') }}</span>
+                    <span class="severity-badge {{ severity_class }}">{{ severity }}</span>
+                </div>
+                <div class="metric-box">
+                    <span class="metric-label">{{ t('area_label') }}</span>
+                    <span class="metric-val">{{ affected_area }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Voice Narration / Audio Advisory for Farmers (Accessibility) -->
+        <div class="audio-advisory-banner no-print">
+            <div class="audio-icon"><i class="fa-solid fa-volume-high"></i></div>
+            <div class="audio-text">
+                <h4>{{ t('audio_title') }}</h4>
+                <p>{{ t('audio_desc') }}</p>
+            </div>
+            <div class="audio-controls">
+                <button type="button" class="btn-voice" data-voice-lang="en" id="btnVoiceEn">
+                    <i class="fa-solid fa-play"></i> {{ t('audio_en') }}
+                </button>
+                <button type="button" class="btn-voice" data-voice-lang="hi" id="btnVoiceHi">
+                    <i class="fa-solid fa-play"></i> {{ t('audio_hi') }}
+                </button>
+                <button type="button" class="btn-voice" data-voice-lang="kn" id="btnVoiceKn">
+                    <i class="fa-solid fa-play"></i> {{ t('audio_kn') }}
+                </button>
+                <button type="button" class="btn-voice btn-voice-ask" data-voice-start>
+                    <i class="fa-solid fa-microphone"></i> {{ t('voice_ask') }}
+                </button>
+            </div>
+        </div>
+
+        <!-- Hidden Voice Script Storage -->
+        <div id="voiceScriptEn" class="hidden">{{ voice_en }}</div>
+        <div id="voiceScriptHi" class="hidden">{{ voice_hi }}</div>
+        <div id="voiceScriptKn" class="hidden">{{ voice_kn }}</div>
+
+        <!-- Comparative Visualizer: Original Image vs Grad-CAM Heatmap -->
+        <div class="visual-comparison-section">
+            <h3 class="section-title"><i class="fa-solid fa-camera-retro"></i> {{ t('visual_title') }}</h3>
+            <p class="section-desc">{{ t('visual_desc') }}</p>
+
+            <div class="image-comparison-grid">
+                <!-- Original Uploaded Leaf -->
+                <div class="image-box">
+                    <div class="image-box-header">
+                        <span><i class="fa-solid fa-image"></i> {{ t('original_title') }}</span>
+                    </div>
+                    <div class="img-wrapper">
+                        <img src="{{ url_for('static', filename=image_path) }}" alt="{{ t('original_title') }}" class="diagnostic-img">
+                    </div>
+                    <div class="image-box-footer">{{ t('original_footer') }}</div>
+                </div>
+
+                <!-- Grad-CAM Heatmap -->
+                {% if has_gradcam and gradcam_path %}
+                <div class="image-box">
+                    <div class="image-box-header highlight-header">
+                        <span><i class="fa-solid fa-fire"></i> {{ t('gradcam_title') }}</span>
+                    </div>
+                    <div class="img-wrapper">
+                        <img src="{{ url_for('static', filename=gradcam_path) }}" alt="{{ t('gradcam_title') }}" class="diagnostic-img">
+                    </div>
+                    <div class="image-box-footer">{{ t('gradcam_footer') }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- In-Depth Diagnostic Detail Sections -->
+        <div class="advisory-sections-grid">
+
+            <!-- Section 0: Plain-language reason for the farmer -->
+            <div class="detail-card card-reason">
+                <div class="detail-card-header">
+                    <div class="card-icon icon-reason"><i class="fa-solid fa-lightbulb"></i></div>
+                    <div>
+                        <h3>{{ t('farmer_reason_title') }}</h3>
+                        <span class="card-tagline">{{ t('farmer_reason_tag') }}</span>
+                    </div>
+                </div>
+                <div class="detail-card-body">
+                    <p class="lead-text farmer-reason-text">{{ farmer_reason }}</p>
+                </div>
+            </div>
+
+            <!-- Section 1: Why It Happened (Environmental & Climatic Drivers) -->
+            <div class="detail-card card-why">
+                <div class="detail-card-header">
+                    <div class="card-icon icon-why"><i class="fa-solid fa-cloud-sun-rain"></i></div>
+                    <div>
+                        <h3>{{ t('why_title') }}</h3>
+                        <span class="card-tagline">{{ t('why_tag') }}</span>
+                    </div>
+                </div>
+                <div class="detail-card-body">
+                    <p class="lead-text">{{ why_it_happened }}</p>
+                </div>
+            </div>
+
+            <!-- Section 2: Detailed Causes & Transmission Path -->
+            <div class="detail-card card-causes">
+                <div class="detail-card-header">
+                    <div class="card-icon icon-causes"><i class="fa-solid fa-shield-virus"></i></div>
+                    <div>
+                        <h3>{{ t('causes_title') }}</h3>
+                        <span class="card-tagline">{{ t('causes_tag') }}</span>
+                    </div>
+                </div>
+                <div class="detail-card-body">
+                    <p class="lead-text">{{ causes }}</p>
+                </div>
+            </div>
+
+            <!-- Section 3: Detailed Visual Symptoms -->
+            <div class="detail-card card-symptoms">
+                <div class="detail-card-header">
+                    <div class="card-icon icon-symptoms"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
+                    <div>
+                        <h3>{{ t('symptoms_title') }}</h3>
+                        <span class="card-tagline">{{ t('symptoms_tag') }}</span>
+                    </div>
+                </div>
+                <div class="detail-card-body">
+                    <p class="lead-text">{{ symptoms }}</p>
+                </div>
+            </div>
+
+            <!-- Section 4: Curative Treatment (Chemical & Organic Prescriptions) -->
+            <div class="detail-card card-treatment">
+                <div class="detail-card-header">
+                    <div class="card-icon icon-treatment"><i class="fa-solid fa-prescription-bottle-medical"></i></div>
+                    <div>
+                        <h3>{{ t('treatment_title') }}</h3>
+                        <span class="card-tagline">{{ t('treatment_tag') }}</span>
+                    </div>
+                </div>
+                <div class="detail-card-body">
+                    <!-- Immediate Action Alert -->
+                    {% if treatment_details.immediate_action %}
+                    <div class="urgent-alert-box">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <div>
+                            <strong>{{ t('immediate_label') }}:</strong>
+                            <p>{{ treatment_details.immediate_action }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="treatment-subgrid">
+                        <div class="treatment-col">
+                            <h4><i class="fa-solid fa-flask-vial"></i> {{ t('chemical_title') }}</h4>
+                            <p>{{ treatment_details.chemical }}</p>
+                        </div>
+                        <div class="treatment-col">
+                            <h4><i class="fa-solid fa-leaf"></i> {{ t('organic_title') }}</h4>
+                            <p>{{ treatment_details.organic }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 5: Comprehensive Prevention & Long-Term Farm Management -->
+            <div class="detail-card card-prevention">
+                <div class="detail-card-header">
+                    <div class="card-icon icon-prevention"><i class="fa-solid fa-shield-halved"></i></div>
+                    <div>
+                        <h3>{{ t('prevention_title') }}</h3>
+                        <span class="card-tagline">{{ t('prevention_tag') }}</span>
+                    </div>
+                </div>
+                <div class="detail-card-body">
+                    <div class="prevention-subgrid">
+                        <div class="prevention-item">
+                            <span class="prevention-item-title"><i class="fa-solid fa-dna"></i> {{ t('resistant_title') }}</span>
+                            <p>{{ prevention_details.resistant_varieties }}</p>
+                        </div>
+                        <div class="prevention-item">
+                            <span class="prevention-item-title"><i class="fa-solid fa-tractor"></i> {{ t('cultural_title') }}</span>
+                            <p>{{ prevention_details.cultural_practices }}</p>
+                        </div>
+                        <div class="prevention-item">
+                            <span class="prevention-item-title"><i class="fa-solid fa-cubes-stacked"></i> {{ t('soil_title') }}</span>
+                            <p>{{ prevention_details.soil_nutrition }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 6: Step-by-step prevention checklist for farmers -->
+            <div class="detail-card card-steps">
+                <div class="detail-card-header">
+                    <div class="card-icon icon-steps"><i class="fa-solid fa-list-check"></i></div>
+                    <div>
+                        <h3>{{ t('prevention_steps_title') }}</h3>
+                        <span class="card-tagline">{{ t('prevention_steps_tag') }}</span>
+                    </div>
+                    <button type="button" class="btn-voice btn-voice-dark step-voice-btn no-print"
+                            data-voice-steps>
+                        <i class="fa-solid fa-volume-high"></i> {{ t('voice_steps') }}
+                    </button>
+                </div>
+                <div class="detail-card-body">
+                    <ol class="prevention-steps">
+                        {% for step in prevention_steps %}
+                        <li class="prevention-step">
+                            <span class="step-number" aria-hidden="true">{{ loop.index }}</span>
+                            <p class="step-text">{{ step }}</p>
+                        </li>
+                        {% endfor %}
+                    </ol>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Official Report Footer -->
+        <div class="report-footer">
+            <div class="report-meta">
+                <p><strong>{{ t('report_ref') }}:</strong> CS-AI-{{ disease }}-{{ confidence }}</p>
+                <p><strong>{{ t('report_model') }}:</strong> {{ t('report_model_value') }}</p>
+            </div>
+            <div class="signature-block">
+                <p class="sign-line"></p>
+                <p>{{ t('authorized') }}</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bottom Action Button (Return Home) -->
+    <div class="bottom-action no-print">
+        <a href="{{ url_for('home') }}" class="btn btn-primary btn-lg">
+            <i class="fa-solid fa-cloud-arrow-up"></i> {{ t('btn_another') }}
+        </a>
+    </div>
+
+</div>
+{% endblock %}

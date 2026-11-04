@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+env/
+
+# Local secrets and database
+.secret_key
+users.db
+users.db-journal
+*.sqlite3
+
+# Uploaded images and generated Grad-CAM outputs
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Environment and editor files
+.env
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs and test artifacts
+*.log
+_smoke_test.py

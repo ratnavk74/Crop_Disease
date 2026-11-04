@@ -52,6 +52,9 @@ app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
 
+# Bump this when CSS/JS changes so browsers never serve an old cached bundle.
+ASSET_VERSION = "2026-11-04-camera"
+
 
 def _load_secret_key():
     """Use SECRET_KEY from the environment, or a generated local key file."""
@@ -99,6 +102,12 @@ def load_language_and_user():
 def inject_globals():
     lang = getattr(g, "lang", DEFAULT_LANGUAGE)
     user = getattr(g, "user", None)
+    endpoint = request.endpoint or ""
+
+    # The diagnosis report is produced by POST /predict, so switching language
+    # there should return to the upload page instead of re-posting the form.
+    language_next = "/" if endpoint in {"predict", "api_predict"} else request.path
+
     return {
         "t": lambda key, **kwargs: translate(key, lang, **kwargs),
         "lang": lang,
@@ -108,7 +117,18 @@ def inject_globals():
         "is_authenticated": bool(user),
         "speech_lang": LANGUAGES[lang]["speech"],
         "current_year": 2026,
+        "asset_version": ASSET_VERSION,
+        "language_next": language_next,
     }
+
+
+@app.after_request
+def _prevent_stale_pages(response):
+    """Keep translated HTML out of the browser cache after a language switch."""
+    if response.mimetype == "text/html":
+        response.headers["Cache-Control"] = "no-store, max-age=0, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+    return response
 
 
 def login_required(view):
@@ -162,7 +182,18 @@ def login():
 
         if user:
             session["user_id"] = user["id"]
-            session["lang"] = normalize_language(user["preferred_language"]) or g.lang
+
+            # Keep a language the farmer explicitly picked on the login page.
+            # Otherwise restore the language saved in their profile.
+            saved_language = normalize_language(user["preferred_language"])
+            picked_language = normalize_language(session.get("lang"))
+            if session.get("lang_explicit"):
+                chosen_language = picked_language or saved_language or g.lang
+            else:
+                chosen_language = saved_language or picked_language or g.lang
+            session["lang"] = chosen_language
+            update_user_language(user["id"], chosen_language)
+
             session.permanent = bool(request.form.get("remember"))
             flash(
                 translate("flash_welcome", session["lang"], name=user["name"]),
@@ -223,12 +254,19 @@ def set_language(language):
         return redirect(url_for("home") if getattr(g, "user", None) else url_for("login"))
 
     session["lang"] = code
+    session["lang_explicit"] = True
     if getattr(g, "user", None):
         update_user_language(g.user["id"], code)
 
     next_url = request.args.get("next", "")
     fallback = "home" if getattr(g, "user", None) else "login"
     return redirect(_safe_next(next_url, fallback_endpoint=fallback))
+
+
+@app.route("/set-language")
+def set_language_query():
+    """No-JavaScript fallback used by the navigation language form."""
+    return set_language(request.args.get("lang", ""))
 
 
 # ---------------------------------------------------------------------------

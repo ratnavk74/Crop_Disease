@@ -48,6 +48,16 @@
                 </div>
             </div>
 
+            <!-- Camera capture: live webcam preview on desktop, rear camera on phones -->
+            <div class="upload-camera-row">
+                <button type="button" class="btn btn-outline camera-btn" id="btnOpenCamera">
+                    <i class="fa-solid fa-camera"></i> {{ t('camera_open') }}
+                </button>
+                <span class="camera-hint">{{ t('camera_hint') }}</span>
+            </div>
+            <input type="file" id="cameraInput" accept="image/*" capture="environment"
+                   class="hidden" tabindex="-1" aria-hidden="true">
+
             <button type="submit" class="btn btn-primary btn-block btn-analyze" id="btnSubmit">
                 <span class="btn-text"><i class="fa-solid fa-wand-magic-sparkles"></i> {{ t('btn_analyze') }}</span>
                 <span class="btn-loader hidden" id="btnLoader"><i class="fa-solid fa-circle-notch fa-spin"></i> {{ t('btn_analyzing') }}</span>
@@ -249,4 +259,40 @@
         </div>
     </div>
 </section>
+
+<!-- Camera capture dialog -->
+<div class="camera-modal hidden" id="cameraModal" role="dialog" aria-modal="true"
+     aria-labelledby="cameraTitle">
+    <div class="camera-dialog">
+        <div class="camera-head">
+            <h3 id="cameraTitle"><i class="fa-solid fa-camera"></i> {{ t('camera_title') }}</h3>
+            <button type="button" class="camera-close" id="btnCloseCamera"
+                    aria-label="{{ t('camera_close') }}">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="camera-stage">
+            <video id="cameraVideo" playsinline autoplay muted></video>
+            <canvas id="cameraCanvas" class="hidden"></canvas>
+            <p class="camera-status" id="cameraStatus">{{ t('camera_starting') }}</p>
+        </div>
+
+        <div class="camera-actions">
+            <button type="button" class="btn btn-primary" id="btnCapturePhoto" disabled>
+                <i class="fa-solid fa-camera-retro"></i> {{ t('camera_capture') }}
+            </button>
+            <button type="button" class="btn btn-outline" id="btnSwitchCamera">
+                <i class="fa-solid fa-camera-rotate"></i> {{ t('camera_switch') }}
+            </button>
+            <button type="button" class="btn btn-outline" id="btnCancelCamera">
+                <i class="fa-solid fa-xmark"></i> {{ t('camera_cancel') }}
+            </button>
+        </div>
+
+        <p class="camera-note">
+            <i class="fa-solid fa-circle-info"></i> {{ t('camera_note') }}
+        </p>
+    </div>
+</div>
 {% endblock %}

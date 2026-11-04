@@ -11,7 +11,7 @@
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Custom Stylesheet -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ asset_version }}">
     {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -31,15 +31,19 @@
                 </div>
 
                 <!-- Language recognition / switcher -->
-                <label class="language-switcher" title="{{ t('language_note') }}">
+                <form class="language-switcher" method="get" action="{{ url_for('set_language_query') }}"
+                      title="{{ t('language_note') }}">
                     <i class="fa-solid fa-language" aria-hidden="true"></i>
-                    <span class="sr-only">{{ t('nav_language') }}</span>
-                    <select id="languageSelect" data-lang-select aria-label="{{ t('nav_language') }}">
+                    <label class="sr-only" for="languageSelect">{{ t('nav_language') }}</label>
+                    <select id="languageSelect" name="lang" data-lang-select
+                            aria-label="{{ t('nav_language') }}"
+                            onchange="this.form.submit()">
                         {% for code, meta in languages.items() %}
                         <option value="{{ code }}" {% if code == lang %}selected{% endif %}>{{ meta.native }}</option>
                         {% endfor %}
                     </select>
-                </label>
+                    <input type="hidden" name="next" value="{{ language_next }}">
+                </form>
 
                 {% if is_authenticated %}
                 <span class="nav-user">
@@ -194,8 +198,8 @@
     </script>
 
     <!-- Custom JavaScript -->
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/voice.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}?v={{ asset_version }}"></script>
+    <script src="{{ url_for('static', filename='js/voice.js') }}?v={{ asset_version }}"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

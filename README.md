@@ -18,6 +18,7 @@ Repository: <https://github.com/ratnavk74/Crop_Disease.git>
 | **Spoken replies** | The assistant answers aloud with SpeechSynthesis and also shows the reply as text. |
 | **Simple reason for the disease** | A plain-language "Why did this happen?" explanation written for farmers, not agronomists. |
 | **Step-by-step prevention** | A numbered checklist from pre-sowing to harvest, with a "Listen to steps" button. |
+| **Camera capture** | Take a fresh leaf photo with the device camera instead of browsing for a file. |
 | **Farmer login** | Local SQLite accounts with hashed passwords, registration, remember-me, and a demo account. |
 | **Full advisory report** | Symptoms, causes, chemical + organic treatment, resistant varieties, cultural practices, soil nutrition, and printable report. |
 | **1-click test samples** | Seven preloaded leaf images for instant testing without uploading a file. |
@@ -48,8 +49,8 @@ Crop_Disease_Enhanced/
 │   └── recommendation.py        # Agronomic knowledge base
 │
 ├── static/
-│   ├── css/style.css            # Responsive UI, auth pages, voice widget, print layout
-│   ├── js/main.js               # Upload preview, language switch, TTS helpers
+│   ├── css/style.css            # Responsive UI, auth pages, camera dialog, voice widget, print layout
+│   ├── js/main.js               # Upload preview, camera capture, TTS helpers
 │   ├── js/voice.js              # Speech recognition, assistant calls and actions
 │   ├── samples/                 # 7 benchmark leaves
 │   └── uploads/                 # Uploaded images and Grad-CAM outputs
@@ -122,7 +123,8 @@ You can also tap **Fill demo account** and then **Login**, or create your own ac
 
 * On the first visit the server reads the browser's `Accept-Language` header and picks the best match among **English (`en`)**, **Hindi (`hi`)**, and **Kannada (`kn`)**.
 * The selected language is stored in the session. For logged-in farmers it is also saved in their profile so it follows them on the next device login.
-* The navbar selector changes the language immediately (`/set-language/<code>`).
+* The navbar selector submits `/set-language?lang=<code>`; the older `/set-language/<code>` route is still supported.
+* A language you pick on the login page is kept after you sign in, even if your saved profile uses another language.
 * All interface text, disease names, advisories, prevention steps, flash messages, and voice replies are localized.
 * To add another language, add an entry in `LANGUAGES` and `UI` in `utils/i18n.py`, plus the disease translations, then extend `FARMER_GUIDES`.
 
@@ -154,6 +156,22 @@ The rule-based engine in `utils/assistant.py` understands English, Hindi, and Ka
 | Internet | Needed for Google Fonts / Font Awesome icons, and for some cloud speech voices. |
 
 If voice input is unavailable, the typed/example-chip questions still work, and the audio advisory buttons on the report page can read the report aloud.
+
+---
+
+## 📷 Camera Capture
+
+1. On the upload card, click **Use Camera**.
+2. Allow camera permission when the browser asks.
+3. Hold the affected leaf in good light, fill the frame, then click **Capture Photo**.
+4. The captured photo is placed in the normal upload preview. Check it, then click **Diagnose & Generate In-Depth Advisory**.
+
+Notes:
+
+* Live preview needs `localhost` / `127.0.0.1` or HTTPS, and a browser with `getUserMedia` (Chrome/Edge recommended).
+* On phones the **Switch Camera** button toggles between the rear and front camera.
+* If live preview is unavailable or permission is denied, the app opens the phone's native camera picker instead, so the feature degrades gracefully.
+* The photo is stored in `static/uploads/` only for this diagnosis and Grad-CAM report.
 
 ---
 
@@ -246,6 +264,8 @@ Possible actions: `open_upload`, `speak_advisory`, `read_steps`, `navigate`, `se
 | Model file not found | Keep `model/crop_disease_model.h5` in the project. |
 | Microphone button does nothing | Use Chrome/Edge, open `localhost`/`127.0.0.1`, and allow microphone permission. |
 | No sound in Hindi/Kannada | Install the Hindi/Kannada voice pack in Windows Settings → Time & Language → Speech, or use Chrome which may provide cloud voices. |
+| Language does not change | Make sure the enhanced app is the one running on `http://127.0.0.1:5000` (not an older copy on your Desktop), then hard-refresh with `Ctrl+F5`. The app now sends `Cache-Control: no-store` for pages and versioned CSS/JS URLs. |
+| Camera preview does not open | Use Chrome/Edge on `localhost`/`127.0.0.1` and allow camera permission. On phones, the native camera picker opens automatically when live preview is unavailable. |
 | Login fails | Use `demo@cropshield.ai` / `demo1234`, or register a new account. Delete `users.db` only if you want to reset local accounts (the demo account is re-seeded on startup). |
 | Port 5000 already in use | Stop the other process or change the port in `app.py`. |
 | Prediction is slow the first time | TensorFlow is loading the model; later predictions are faster. |

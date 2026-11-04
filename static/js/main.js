@@ -11,7 +11,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     initDropZone();
     initFormSubmit();
-    initLanguageSwitcher();
+    initCamera();
     initPasswordToggles();
     initDemoLogin();
     initFlashMessages();
@@ -115,16 +115,173 @@ function initFormSubmit() {
 }
 
 // ==========================================================================
-// Language switcher (auto-detection happens on the server)
+// Put a captured/selected File into the real upload input
 // ==========================================================================
-function initLanguageSwitcher() {
-    const select = document.getElementById('languageSelect');
-    if (!select) return;
+function setUploadFile(file) {
+    const fileInput = document.getElementById('fileInput');
+    if (!fileInput || !file) return false;
 
-    select.addEventListener('change', () => {
-        const template = CFG.urls?.setLanguage || '/set-language/__LANG__';
-        const next = encodeURIComponent(window.location.pathname + window.location.search);
-        window.location.href = template.replace('__LANG__', select.value) + '?next=' + next;
+    try {
+        const transfer = new DataTransfer();
+        transfer.items.add(file);
+        fileInput.files = transfer.files;
+        fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+        return true;
+    } catch (err) {
+        return false;
+    }
+}
+
+// ==========================================================================
+// Camera capture (getUserMedia -> canvas -> File)
+// ==========================================================================
+function initCamera() {
+    const openBtn = document.getElementById('btnOpenCamera');
+    const modal = document.getElementById('cameraModal');
+    if (!openBtn || !modal) return;
+
+    const video = document.getElementById('cameraVideo');
+    const canvas = document.getElementById('cameraCanvas');
+    const status = document.getElementById('cameraStatus');
+    const captureBtn = document.getElementById('btnCapturePhoto');
+    const switchBtn = document.getElementById('btnSwitchCamera');
+    const closeBtn = document.getElementById('btnCloseCamera');
+    const cancelBtn = document.getElementById('btnCancelCamera');
+    const fallbackInput = document.getElementById('cameraInput');
+
+    let stream = null;
+    let facingMode = 'environment';
+
+    const message = (key, fallback) => (CFG.i18n && CFG.i18n[key]) || fallback;
+
+    function setStatus(text, isError) {
+        if (!status) return;
+        status.textContent = text || '';
+        status.classList.toggle('camera-status-error', !!isError);
+        status.classList.toggle('hidden', !text);
+    }
+
+    function cameraSupported() {
+        return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+    }
+
+    function stopStream() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+        if (video) video.srcObject = null;
+        if (captureBtn) captureBtn.disabled = true;
+    }
+
+    async function startStream() {
+        if (!cameraSupported()) {
+            setStatus(message('cameraNotSupported',
+                'Live camera preview is not available here. Opening your phone camera instead.'), true);
+            if (fallbackInput) fallbackInput.click();
+            return;
+        }
+
+        stopStream();
+        setStatus(message('cameraStarting', 'Starting camera…'), false);
+
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                audio: false,
+                video: {
+                    facingMode: { ideal: facingMode },
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            });
+            video.srcObject = stream;
+            await video.play();
+            setStatus('', false);
+            if (captureBtn) captureBtn.disabled = false;
+        } catch (err) {
+            const denied = err && (err.name === 'NotAllowedError' || err.name === 'SecurityError');
+            setStatus(
+                denied
+                    ? message('cameraPermission', 'Camera permission was denied. Allow camera access or upload a photo.')
+                    : message('cameraError', 'Could not start the camera. Please upload a photo instead.'),
+                true
+            );
+        }
+    }
+
+    function openCamera() {
+        modal.classList.remove('hidden');
+        document.body.classList.add('camera-open');
+        startStream();
+        window.setTimeout(() => {
+            if (captureBtn && !captureBtn.disabled) captureBtn.focus();
+        }, 120);
+    }
+
+    function closeCamera() {
+        stopStream();
+        modal.classList.add('hidden');
+        document.body.classList.remove('camera-open');
+    }
+
+    function capturePhoto() {
+        if (!stream || !video || !video.videoWidth) return;
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob((blob) => {
+            if (!blob) {
+                setStatus(message('cameraNoPhoto', 'Could not capture the photo. Please try again.'), true);
+                return;
+            }
+            const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const file = new File([blob], `camera_${stamp}.jpg`, { type: 'image/jpeg' });
+
+            if (!setUploadFile(file)) {
+                setStatus(message('cameraError', 'Could not use this photo. Please upload it instead.'), true);
+                return;
+            }
+
+            closeCamera();
+            const preview = document.getElementById('previewContainer');
+            if (preview) preview.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 'image/jpeg', 0.92);
+    }
+
+    openBtn.addEventListener('click', openCamera);
+    if (closeBtn) closeBtn.addEventListener('click', closeCamera);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeCamera);
+    if (captureBtn) captureBtn.addEventListener('click', capturePhoto);
+    if (switchBtn) {
+        switchBtn.addEventListener('click', () => {
+            facingMode = facingMode === 'environment' ? 'user' : 'environment';
+            startStream();
+        });
+    }
+
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) closeCamera();
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !modal.classList.contains('hidden')) closeCamera();
+    });
+
+    // Phones without getUserMedia fall back to the native camera picker.
+    if (fallbackInput) {
+        fallbackInput.addEventListener('change', () => {
+            if (fallbackInput.files && fallbackInput.files[0]) {
+                setUploadFile(fallbackInput.files[0]);
+                fallbackInput.value = '';
+                closeCamera();
+            }
+        });
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && !modal.classList.contains('hidden')) closeCamera();
     });
 }
 

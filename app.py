@@ -25,6 +25,7 @@ from utils.auth import (
     init_db,
     update_user_language,
 )
+from utils.gan_translate import crop_from_disease, gan_available, translate_leaf
 from utils.i18n import (
     DEFAULT_LANGUAGE,
     LANGUAGES,
@@ -53,7 +54,7 @@ app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
 
 # Bump this when CSS/JS changes so browsers never serve an old cached bundle.
-ASSET_VERSION = "2026-11-04-camera"
+ASSET_VERSION = "2026-11-17-gan"
 
 
 def _load_secret_key():
@@ -343,6 +344,16 @@ def predict():
     full_gradcam_path = os.path.join(UPLOAD_FOLDER, f"gradcam_{os.path.basename(filepath)}")
     has_gradcam = os.path.exists(full_gradcam_path)
 
+    # Optional CycleGAN lesion visualisation. It runs only when a matching
+    # checkpoint exists, so the app works normally without PyTorch/checkpoints.
+    gan_image = None
+    crop_key = crop_from_disease(disease)
+    if crop_key and gan_available(crop_key):
+        gan_filename = f"gan_{os.path.basename(filepath)}"
+        gan_full_path = os.path.join(UPLOAD_FOLDER, gan_filename)
+        if translate_leaf(filepath, crop_key, gan_full_path):
+            gan_image = f"uploads/{gan_filename}"
+
     return render_template(
         "result.html",
         page="result",
@@ -372,6 +383,7 @@ def predict():
         prevention_details=info.get("prevention_details", {}),
         has_gradcam=has_gradcam,
         gradcam_path=web_gradcam_path if has_gradcam else None,
+        gan_image=gan_image,
         voice_en=info.get("voice_en", ""),
         voice_hi=info.get("voice_hi", ""),
         voice_kn=info.get("voice_kn", ""),
@@ -403,6 +415,13 @@ def api_predict():
     info = _localized_info(disease)
     severity_code = _severity_code(disease, confidence)
 
+    gan_url = None
+    crop_key = crop_from_disease(disease)
+    if crop_key and gan_available(crop_key):
+        gan_name = f"gan_{unique_name}"
+        if translate_leaf(filepath, crop_key, os.path.join(UPLOAD_FOLDER, gan_name)):
+            gan_url = f"/static/uploads/{gan_name}"
+
     return jsonify(
         {
             "status": "success",
@@ -425,6 +444,7 @@ def api_predict():
             "voice": info.get("voice", ""),
             "image_url": f"/static/uploads/{unique_name}",
             "gradcam_url": f"/static/uploads/gradcam_{unique_name}",
+            "gan_url": gan_url,
         }
     )
 

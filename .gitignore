@@ -26,3 +26,7 @@ Thumbs.db
 # Logs and test artifacts
 *.log
 _smoke_test.py
+
+# CycleGAN training data and previews
+data/
+model/gan/*/samples/

@@ -106,6 +106,18 @@
                     <div class="image-box-footer">{{ t('gradcam_footer') }}</div>
                 </div>
                 {% endif %}
+
+                {% if gan_image %}
+                <div class="image-box">
+                    <div class="image-box-header gan-header">
+                        <span><i class="fa-solid fa-wand-magic-sparkles"></i> {{ t('gan_title') }}</span>
+                    </div>
+                    <div class="img-wrapper">
+                        <img src="{{ url_for('static', filename=gan_image) }}" alt="{{ t('gan_title') }}" class="diagnostic-img">
+                    </div>
+                    <div class="image-box-footer">{{ t('gan_footer') }}</div>
+                </div>
+                {% endif %}
             </div>
         </div>
 

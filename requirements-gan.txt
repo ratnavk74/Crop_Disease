@@ -1,0 +1,14 @@
+# Optional CycleGAN dependencies.
+#
+# The Flask app works without these. Install them only when you want the
+# "Generative AI view" card on the result page and you have trained
+# checkpoints in model/gan/<crop>/.
+#
+# CPU-only PyTorch (Windows/Linux):
+#   pip install -r requirements-gan.txt
+#
+# GPU training (Colab/Kaggle) already includes PyTorch, so this file is mainly
+# for local inference.
+
+torch>=2.2.0
+torchvision>=0.17.0

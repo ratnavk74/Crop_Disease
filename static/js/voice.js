@@ -35,6 +35,20 @@
     let busy = false;
     let lastRequestId = 0;
     let recognitionSession = 0;
+    let attemptToken = 0;
+    const VOICE_LANG_KEY = 'cropshield.voiceLang';
+
+    function activeVoiceLangTag() {
+        if (ui.langSelect && ui.langSelect.value) return ui.langSelect.value;
+        return CFG.speechLang || 'en-IN';
+    }
+
+    function activeVoiceLangCode() {
+        if (ui.langSelect && ui.langSelect.selectedOptions && ui.langSelect.selectedOptions[0]) {
+            return ui.langSelect.selectedOptions[0].getAttribute('data-lang') || CFG.lang || 'en';
+        }
+        return CFG.lang || 'en';
+    }
 
     function t(key, fallback) {
         const value = CFG.i18n && CFG.i18n[key];
@@ -55,13 +69,41 @@
         ui.replyText = document.getElementById('voiceReplyText');
         ui.listenBtn = document.getElementById('voiceListenBtn');
         ui.listenLabel = ui.listenBtn ? ui.listenBtn.querySelector('.voice-listen-label') : null;
+        ui.langSelect = document.getElementById('voiceLangSelect');
 
+        restoreVoiceLanguage();
         bindEvents();
         setStatus(t('help', ''));
 
         if (!SpeechRecognition) {
             showUnsupported();
         }
+    }
+
+    function restoreVoiceLanguage() {
+        if (!ui.langSelect) return;
+
+        try {
+            const saved = window.localStorage.getItem(VOICE_LANG_KEY);
+            if (saved) {
+                const match = Array.prototype.find.call(ui.langSelect.options, function (option) {
+                    return option.value === saved;
+                });
+                if (match) ui.langSelect.value = saved;
+            }
+        } catch (err) {
+            /* localStorage can be blocked in private mode */
+        }
+
+        ui.langSelect.addEventListener('change', function () {
+            try {
+                window.localStorage.setItem(VOICE_LANG_KEY, ui.langSelect.value);
+            } catch (err) {
+                /* ignore */
+            }
+            if (listening) stopListening();
+            setStatus(t('voice_mic_hint', ''), false);
+        });
     }
 
     function bindEvents() {
@@ -184,6 +226,16 @@
         ui.reply.classList.toggle('hidden', !text);
     }
 
+    function speechCandidates(tag) {
+        const full = (tag || 'en-IN').trim();
+        const base = full.split('-')[0];
+        const candidates = [full];
+        if (base && base !== full) candidates.push(base);
+        // A few Chromium builds only accept en-US for English recognition.
+        if (base === 'en' && candidates.indexOf('en-US') === -1) candidates.push('en-US');
+        return candidates;
+    }
+
     function startListening() {
         if (busy) return;
 
@@ -206,88 +258,134 @@
             recognition = null;
         }
 
-        let finalText = '';
-        let interimText = '';
+        const candidates = speechCandidates(activeVoiceLangTag());
+        let attemptIndex = 0;
 
-        try {
-            recognition = new SpeechRecognition();
-        } catch (err) {
-            setStatus(t('voiceNotSupported', 'Speech recognition is not available.'), true);
-            return;
+        function isCurrent(token) {
+            return token === attemptToken && sessionId === recognitionSession;
         }
 
-        recognition.lang = CFG.speechLang || 'en-IN';
-        recognition.continuous = false;
-        recognition.interimResults = true;
-        recognition.maxAlternatives = 1;
-
-        recognition.onstart = function () {
+        function connect(languageTag) {
             if (sessionId !== recognitionSession) return;
-            setListeningState(true);
-            setStatus(t('listening', 'Listening…'), false);
-            showReply('');
-        };
 
-        recognition.onresult = function (event) {
-            if (sessionId !== recognitionSession) return;
-            interimText = '';
-            for (let i = event.resultIndex; i < event.results.length; i += 1) {
-                const result = event.results[i];
-                const transcript = result[0] ? result[0].transcript : '';
-                if (result.isFinal) {
-                    finalText += transcript;
-                } else {
-                    interimText += transcript;
-                }
+            attemptToken += 1;
+            const token = attemptToken;
+
+            if (recognition) {
+                try { recognition.abort(); } catch (err) { /* ignore */ }
             }
-            const preview = (finalText + ' ' + interimText).trim();
-            if (preview) showTranscript(preview);
-        };
 
-        recognition.onerror = function (event) {
-            if (sessionId !== recognitionSession) return;
-            const code = event.error || '';
-            if (code === 'aborted') return;
+            let finalText = '';
+            let interimText = '';
+            let retryPending = false;
 
-            const messages = {
-                'not-allowed': t('permissionDenied', 'Microphone permission was denied.'),
-                'service-not-allowed': t('permissionDenied', 'Microphone permission was denied.'),
-                'audio-capture': t('permissionDenied', 'No microphone was found.'),
-                'no-speech': t('noSpeech', 'I could not hear anything. Please try again.'),
-                'network': t('error', 'Network error. Please try again.'),
-                'language-not-supported': t('voiceNotSupported', 'This language is not supported by your browser.')
-            };
-            setStatus(messages[code] || t('error', 'Something went wrong. Please try again.'), true);
-        };
-
-        recognition.onend = function () {
-            if (sessionId !== recognitionSession) return;
-            setListeningState(false);
-            const spoken = (finalText || interimText).trim();
-            recognition = null;
-
-            if (!spoken) {
-                if (ui.status && !ui.status.classList.contains('voice-status-error')) {
-                    setStatus(t('noSpeech', 'I could not hear anything. Please try again.'), true);
-                }
+            let local = null;
+            try {
+                local = new SpeechRecognition();
+            } catch (err) {
+                setStatus(t('voiceNotSupported', 'Speech recognition is not available.'), true);
                 return;
             }
 
-            askAssistant(spoken);
-        };
+            recognition = local;
+            local.lang = languageTag;
+            local.continuous = false;
+            local.interimResults = true;
+            local.maxAlternatives = 1;
 
-        try {
-            showTranscript('');
-            setStatus(t('listening', 'Listening…'), false);
-            recognition.start();
-        } catch (err) {
-            setListeningState(false);
-            setStatus(t('error', 'Could not start the microphone. Please try again.'), true);
+            local.onstart = function () {
+                if (!isCurrent(token)) return;
+                setListeningState(true);
+                setStatus(t('listening', 'Listening…'), false);
+                showReply('');
+            };
+
+            local.onresult = function (event) {
+                if (!isCurrent(token)) return;
+                interimText = '';
+                for (let i = event.resultIndex; i < event.results.length; i += 1) {
+                    const result = event.results[i];
+                    const transcript = result[0] ? result[0].transcript : '';
+                    if (result.isFinal) {
+                        finalText += transcript;
+                    } else {
+                        interimText += transcript;
+                    }
+                }
+                const preview = (finalText + ' ' + interimText).trim();
+                if (preview) showTranscript(preview);
+            };
+
+            local.onerror = function (event) {
+                if (!isCurrent(token)) return;
+                const code = event.error || '';
+                if (code === 'aborted') return;
+
+                // Some Chromium builds reject a regional tag such as "hi-IN".
+                // Silently retry with the base language ("hi") before giving up.
+                if (code === 'language-not-supported' && attemptIndex + 1 < candidates.length) {
+                    attemptIndex += 1;
+                    retryPending = true;
+                    setStatus(t('voiceLangRetry', 'Trying a compatible language mode…'), false);
+                    window.setTimeout(function () {
+                        if (isCurrent(token)) connect(candidates[attemptIndex]);
+                    }, 250);
+                    return;
+                }
+
+                const messages = {
+                    'not-allowed': t('permissionDenied', 'Microphone permission was denied.'),
+                    'service-not-allowed': t('permissionDenied', 'Microphone permission was denied.'),
+                    'audio-capture': t('permissionDenied', 'No microphone was found.'),
+                    'no-speech': t('noSpeech', 'I could not hear anything. Please try again.'),
+                    'network': t('voiceNetworkHelp', 'Speech recognition needs an internet connection. Check your network and try again.'),
+                    'language-not-supported': t('voiceLangUnavailable', 'This language is not supported by your browser speech service.')
+                };
+                setListeningState(false);
+                setStatus(messages[code] || t('error', 'Something went wrong. Please try again.'), true);
+            };
+
+            local.onend = function () {
+                if (!isCurrent(token)) return;
+                if (retryPending) return;
+                setListeningState(false);
+                const spoken = (finalText || interimText).trim();
+                recognition = null;
+
+                if (!spoken) {
+                    if (ui.status && !ui.status.classList.contains('voice-status-error')) {
+                        setStatus(t('noSpeech', 'I could not hear anything. Please try again.'), true);
+                    }
+                    return;
+                }
+
+                askAssistant(spoken);
+            };
+
+            try {
+                showTranscript('');
+                setStatus(t('listening', 'Listening…'), false);
+                local.start();
+            } catch (err) {
+                // A previous engine may still be shutting down; retry briefly.
+                if (attemptIndex + 1 < candidates.length) {
+                    attemptIndex += 1;
+                    window.setTimeout(function () {
+                        if (isCurrent(token)) connect(candidates[attemptIndex]);
+                    }, 250);
+                    return;
+                }
+                setListeningState(false);
+                setStatus(t('error', 'Could not start the microphone. Please try again.'), true);
+            }
         }
+
+        connect(candidates[0]);
     }
 
     function stopListening() {
         recognitionSession += 1;
+        attemptToken += 1;
         if (!recognition) {
             setListeningState(false);
             return;
@@ -314,9 +412,10 @@
         setStatus(t('processing', 'Thinking…'), false);
         if (ui.listenBtn) ui.listenBtn.classList.add('is-busy');
 
+        const replyLang = activeVoiceLangCode();
         const payload = {
             text: text,
-            lang: CFG.lang || 'en',
+            lang: replyLang,
             page: CFG.page || 'home',
             disease: CFG.diseaseKey || null,
             confidence: CFG.confidence || null
@@ -338,7 +437,7 @@
                 showReply(reply);
 
                 if (data && data.speak !== false) {
-                    speak(reply);
+                    speak(reply, replyLang);
                 }
 
                 if (data && data.action) {
@@ -350,7 +449,7 @@
                 const message = t('error', 'Sorry, I could not process that. Please try again.');
                 showReply(message);
                 setStatus(message, true);
-                speak(message);
+                speak(message, replyLang);
             })
             .finally(function () {
                 if (requestId !== lastRequestId) return;
@@ -362,13 +461,15 @@
             });
     }
 
-    function speak(text) {
+    function speak(text, langCode) {
         if (!text) return;
         if (!TTS) {
             return;
         }
+
+        const code = langCode || activeVoiceLangCode();
         if (typeof window.speakText === 'function') {
-            window.speakText(text, CFG.lang || 'en');
+            window.speakText(text, code);
             return;
         }
 
@@ -376,7 +477,7 @@
         try {
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = CFG.speechLang || 'en-IN';
+            utterance.lang = { en: 'en-IN', hi: 'hi-IN', kn: 'kn-IN' }[code] || CFG.speechLang || 'en-IN';
             utterance.rate = 0.92;
             window.speechSynthesis.speak(utterance);
         } catch (err) {

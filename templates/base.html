@@ -134,6 +134,20 @@
 
             <div class="voice-status" id="voiceStatus">{{ t('voice_mic_hint') }}</div>
 
+            <div class="voice-lang-row">
+                <label for="voiceLangSelect">
+                    <i class="fa-solid fa-language" aria-hidden="true"></i>
+                    {{ t('voice_language') }}
+                </label>
+                <select id="voiceLangSelect" data-lang-select
+                        title="{{ t('voice_language_help') }}"
+                        aria-label="{{ t('voice_language_help') }}">
+                    {% for code, meta in languages.items() %}
+                    <option value="{{ meta.speech }}" data-lang="{{ code }}" {% if code == lang %}selected{% endif %}>{{ meta.native }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
             <div class="voice-transcript hidden" id="voiceTranscript">
                 <span>{{ t('voice_heard') }}:</span>
                 <p id="voiceTranscriptText"></p>

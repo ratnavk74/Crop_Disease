@@ -23,6 +23,7 @@ Repository: <https://github.com/ratnavk74/Crop_Disease.git>
 | **Farmer login** | Local SQLite accounts with hashed passwords, registration, remember-me, and a demo account. |
 | **Full advisory report** | Symptoms, causes, chemical + organic treatment, resistant varieties, cultural practices, soil nutrition, and printable report. |
 | **1-click test samples** | Seven preloaded leaf images for instant testing without uploading a file. |
+| **Non-leaf guard** | Rejects selfies, human photos, documents and screenshots before they reach the classifier, with an error message in the selected language. |
 | **REST API** | JSON endpoints for prediction, disease list, and the multilingual voice assistant. |
 
 ---
@@ -280,6 +281,14 @@ Upload a leaf image as multipart form data (field name `image`). Requires login.
 
 `gan_url` is `null` when PyTorch or the crop checkpoint is missing.
 
+A non-leaf or human image returns HTTP `400`:
+
+```json
+{
+  "error": "This photo does not look like a maize or wheat leaf..."
+}
+```
+
 ### `GET /api/diseases`
 
 Returns the localized disease summary list.
@@ -493,6 +502,8 @@ or change the Dockerfile build step to install both files.
 | Generative AI card is missing | This is expected without a checkpoint. Install `requirements-gan.txt` and add `model/gan/<crop>/G_AB.pth`, then restart the app. |
 | `ModuleNotFoundError: torch` | Run `pip install -r requirements-gan.txt`. The rest of the app works without it. |
 | GAN output looks like noise | The checkpoint is untrained or the config/crop does not match. Train it with the Colab notebook or lower `--epochs` risk by training longer. |
+| Human photo shows an error | This is intentional. Upload a close-up of a single maize or wheat leaf filling most of the frame. |
+| A valid leaf is rejected | Use a clear, well-lit close-up of the leaf. Avoid screenshots, black-and-white photos, very dark images and photos where the leaf is a tiny part of the frame. |
 
 ---
 

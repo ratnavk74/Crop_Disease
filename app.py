@@ -35,6 +35,7 @@ from utils.i18n import (
     normalize_language,
     translate,
 )
+from utils.leaf_check import check_leaf_image
 from utils.prediction import predict_disease
 from utils.recommendation import get_all_diseases, get_recommendation
 
@@ -320,6 +321,17 @@ def predict():
             file.save(filepath)
             web_image_path = f"uploads/{unique_name}"
             web_gradcam_path = f"uploads/gradcam_{unique_name}"
+
+            # Reject selfies, human photos, documents and other non-leaf images
+            # before they reach the disease classifier.
+            is_leaf, _reason = check_leaf_image(filepath)
+            if not is_leaf:
+                try:
+                    os.remove(filepath)
+                except OSError:
+                    pass
+                flash(translate("error_not_leaf", g.lang), "error")
+                return redirect(url_for("home"))
         else:
             flash(translate("error_invalid_file", g.lang), "error")
             return redirect(url_for("home"))
@@ -410,6 +422,14 @@ def api_predict():
     unique_name = f"api_{timestamp}_{orig_name}"
     filepath = os.path.join(UPLOAD_FOLDER, unique_name)
     file.save(filepath)
+
+    is_leaf, _reason = check_leaf_image(filepath)
+    if not is_leaf:
+        try:
+            os.remove(filepath)
+        except OSError:
+            pass
+        return jsonify({"error": translate("error_not_leaf", g.lang)}), 400
 
     disease, confidence = predict_disease(filepath)
     info = _localized_info(disease)

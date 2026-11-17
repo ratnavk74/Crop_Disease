@@ -346,6 +346,7 @@ UI = {
         "error_invalid_file": "Invalid file type. Please upload a PNG, JPG, JPEG or WEBP image.",
         "error_no_file": "No image was uploaded. Please choose a leaf photo.",
         "error_generic": "Something went wrong. Please try again.",
+        "error_not_leaf": "This photo does not look like a maize or wheat leaf. Human photos and other images are not supported. Please upload a clear, close-up photo of a single crop leaf.",
     },
 
     "hi": {
@@ -597,6 +598,7 @@ UI = {
         "error_invalid_file": "गलत फ़ाइल प्रकार। कृपया PNG, JPG, JPEG या WEBP फोटो अपलोड करें।",
         "error_no_file": "कोई फोटो अपलोड नहीं हुई। कृपया पत्ती की फोटो चुनें।",
         "error_generic": "कुछ गड़बड़ हुई। कृपया फिर कोशिश करें।",
+        "error_not_leaf": "यह फोटो मक्का या गेहूँ की पत्ती नहीं लगती। इंसानों की फोटो और अन्य चित्र समर्थित नहीं हैं। कृपया एक फसल की पत्ती की साफ़ और पास की फोटो अपलोड करें।",
     },
 
     "kn": {
@@ -848,6 +850,7 @@ UI = {
         "error_invalid_file": "ತಪ್ಪು ಫೈಲ್ ಪ್ರಕಾರ. ದಯವಿಟ್ಟು PNG, JPG, JPEG ಅಥವಾ WEBP ಚಿತ್ರ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.",
         "error_no_file": "ಯಾವುದೇ ಚಿತ್ರ ಅಪ್‌ಲೋಡ್ ಆಗಿಲ್ಲ. ದಯವಿಟ್ಟು ಎಲೆಯ ಫೋಟೋ ಆಯ್ಕೆಮಾಡಿ.",
         "error_generic": "ಏನೋ ತಪ್ಪಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+        "error_not_leaf": "ಈ ಫೋಟೋ ಮೆಕ್ಕೆಜೋಳ ಅಥವಾ ಗೋಧಿ ಎಲೆಯಂತೆ ಕಾಣುತ್ತಿಲ್ಲ. ಮನುಷ್ಯರ ಫೋಟೋಗಳು ಮತ್ತು ಇತರ ಚಿತ್ರಗಳನ್ನು ಬೆಂಬಲಿಸುವುದಿಲ್ಲ. ದಯವಿಟ್ಟು ಒಂದು ಬೆಳೆ ಎಲೆಯ ಸ್ಪಷ್ಟ ಹತ್ತಿರದ ಫೋಟೋ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.",
     },
 }
 

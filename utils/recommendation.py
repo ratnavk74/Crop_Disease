@@ -473,7 +473,7 @@ def get_recommendation(disease_key: str) -> dict:
         'crop': 'Cereal Crop',
         'disease_name': disease_key.replace('_', ' '),
         'display_name': disease_key.replace('_', ' '),
-        'pathogen': 'Identified via Deep Learning CNN Classifier',
+        'pathogen': 'Identified via CycleGAN Generative AI + Deep CNN Classifier',
         'category': 'Plant Health Advisory',
         'severity': 'Medium',
         'severity_level': 'Medium',

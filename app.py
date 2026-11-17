@@ -54,7 +54,7 @@ app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
 
 # Bump this when CSS/JS changes so browsers never serve an old cached bundle.
-ASSET_VERSION = "2026-11-17-gan"
+ASSET_VERSION = "2026-11-17-gan-ui"
 
 
 def _load_secret_key():
